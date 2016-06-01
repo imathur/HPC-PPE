@@ -7,7 +7,7 @@ import itertools
 # log.EVNTtoHITS
 
 df_orig = pd.DataFrame(columns=['trfExe.execute', 'merging', 'validation', 'total'])
-df_orig.to_csv('stdout_stageTiming.csv', columns=['trfExe.execute', 'merging', 'validation', 'total'])
+df_orig.to_csv('csvfiles/stdout_stageTiming.csv', columns=['trfExe.execute', 'merging', 'validation', 'total'])
 
 filecount = 0
 included = 0
@@ -21,7 +21,7 @@ for subdir, dirs, files in os.walk('/work/d60/d60/shared/optimisation/benchmark/
             filecount = filecount + 1
             
             df = pd.DataFrame()
-            df = pd.read_csv('stdout_stageTiming.csv')
+            df = pd.read_csv('csvfiles/stdout_stageTiming.csv')
             df = df.drop(df.columns[[0]], axis=1)
             
             open('temp.txt','w').writelines([ line for line in open(filepath) if \
@@ -66,7 +66,7 @@ for subdir, dirs, files in os.walk('/work/d60/d60/shared/optimisation/benchmark/
                 print (filepath)
                 df = df.append(pd.Series(timelist2, index=['trfExe.execute', 'merging', 'validation', 'total']), \
                                ignore_index=True)
-                df.to_csv('stdout_stageTiming.csv')
+                df.to_csv('csvfiles/stdout_stageTiming.csv')
 
 os.remove('temp.txt')
 print ("\nFinished scanning %d of %d log files\n") % (included, filecount)

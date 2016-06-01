@@ -7,7 +7,7 @@ import itertools
 # log.EVNTtoHITS
 
 df_orig = pd.DataFrame(columns=['start', 'end', 'total time'])
-df_orig.to_csv('totalTime.csv', columns=['start', 'end', 'total time'])
+df_orig.to_csv('csvfiles/totalTime.csv', columns=['start', 'end', 'total time'])
 
 filecount = 0
 included = 0
@@ -22,7 +22,7 @@ for subdir, dirs, files in os.walk('/work/d60/d60/shared/optimisation/benchmark/
             filecount = filecount + 1
             
             df = pd.DataFrame()
-            df = pd.read_csv('totalTime.csv')
+            df = pd.read_csv('csvfiles/totalTime.csv')
             df = df.drop(df.columns[[0]], axis=1)
             
             with open(filepath,'rb') as source:
@@ -44,7 +44,7 @@ for subdir, dirs, files in os.walk('/work/d60/d60/shared/optimisation/benchmark/
                 included = included + 1
                 print (filepath)
                 df = df.append(pd.Series(timelist2, index=['start', 'end', 'total time']), ignore_index=True)
-                df.to_csv('totalTime.csv')
+                df.to_csv('csvfiles/totalTime.csv')
 
 print ("\nFinished scanning %d of %d log files\n") % (included, filecount)
 
