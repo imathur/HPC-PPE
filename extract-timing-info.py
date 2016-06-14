@@ -2,10 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 
-# Create dataframe and CSV file in which dataset will be stored
+# Create dataframe in which dataset will be stored
 
-df_orig = pd.DataFrame(columns=['pre-job input', 'opening input file', 'upto appmgr start', 'initialisation', 'event loop', 'ending'])
-df_orig.to_csv('csvfiles/stageTiming.csv', columns=['pre-job input', 'opening input file', 'upto appmgr start', 'initialisation', 'event loop', 'ending'])
+df = pd.DataFrame(columns=['pre-job input', 'opening input file', 'upto appmgr start', 'initialisation', 'event loop', 'ending'])
 
 # Initialize counting variables
 
@@ -21,22 +20,25 @@ for subdir, dirs, files in os.walk('/work/d60/d60/shared/optimisation/benchmark/
         if filepath.endswith('.EVNTtoHITS'):
             filecount = filecount + 1
             
-            # Extract lines containing certain strings from the log file and write the lines to a temporary file
+            # Extract lines containing certain strings from the log file and write the lines to a list
             
-            open('temp.txt','w').writelines([ line for line in open(filepath) if ('Setting up DBRelease' in line or 'in ISF_Input' in line or 'Welcome to ApplicationMgr' in line or 'Event Counter process created' in line or 'Statuses of sub-processes' in line) ])
+            linelist = [ line.rstrip('\n') for line in open(filepath) if ('Setting up DBRelease' in line or \
+                                                                          'in ISF_Input' in line or \
+                                                                          'Welcome to ApplicationMgr' in line or \
+                                                                          'Event Counter process created' in line or \
+                                                                          'Statuses of sub-processes' in line) ]
             
-            # Extract last line of log file and write it to the temporary file
+            # Extract last line of log file and append it to the list
             
-            with open(filepath,'rb') as source, open('temp.txt','a') as output:
+            with open(filepath,'rb') as source:
                 source.seek(-2, 2)
                 while source.read(1) != b"\n":
                     source.seek(-2, 1)
-                output.writelines(str(source.readline()))
+                linelist.append(str(source.readline()))
             
             # Create a list 'timelist' of the first word (string containing timestamp) on each line in the temporary file
             
-            with open('temp.txt',"r") as f:
-                timelist = [r.split()[0] for r in f]
+            timelist = [line.split()[0] for line in linelist]
             
             # Convert each timestamp string element in the list to its equivalent value in seconds
             
@@ -48,30 +50,17 @@ for subdir, dirs, files in os.walk('/work/d60/d60/shared/optimisation/benchmark/
             timelist2 = []
             timelist2 = np.diff(timelist)
             
-            # If the list 'timelist2' has 6 elements (i.e., if the job finished execution and wasn't stopped prematurely), append the list as a new row to the CSV file
+            # If the list 'timelist2' has 6 elements (i.e., if the job finished execution and wasn't stopped prematurely), append the list as a new row to the dataframe
             
             if timelist2.size == 6:
                 included = included + 1
                 print (filepath)
-                
-                # Open CSV file and save it to a Pandas dataframe
-            
-	            df = pd.DataFrame()
-	            df = pd.read_csv('csvfiles/stageTiming.csv')
-	            df = df.drop(df.columns[[0]], axis=1)
+                df = df.append(pd.Series(timelist2, index=['pre-job input', 'opening input file', 'upto appmgr start', 'initialisation', 'event loop', 'ending']), ignore_index=True)
 	            
-	            # Append row to dataframe
-	            
-	            df = df.append(pd.Series(timelist2, index=['pre-job input', 'opening input file', 'upto appmgr start', 'initialisation', 'event loop', 'ending']), ignore_index=True)
-	            
-	            # Write dataframe back to CSV file
-                
-                df.to_csv('csvfiles/stageTiming.csv')
 
-# Delete temporary file and print confirmation of completion of program.
-
-os.remove('temp.txt')
+# Write dataframe back to CSV file and print confirmation of completion of program.
+                
+df.to_csv('csvfiles/stageTiming.csv')
 print ("\nFinished scanning %d of %d log files. Output: csvfiles/stageTiming.csv\n") % (included, filecount)
 
 
-# 
